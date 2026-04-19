@@ -1,0 +1,210 @@
+# ==========================================================
+# SISTEMA DE GESTION ODONTOLOGICA - DR XXX 
+# CON TABLA DE PRECIOS SEGUN TIPO DE CLIENTE
+# ==========================================================
+
+from collections import deque
+
+print("========= SISTEMA DE CITAS ODONTOLOGICAS =========")
+
+cola_clientes = deque()
+
+# ==========================================================
+# TABLA DE PRECIOS (SEGUN IMAGEN)
+# ==========================================================
+
+precios = {
+    "Particular": {
+        "cita": 80000,
+        "Limpieza": 60000,
+        "Calzas": 80000,
+        "Extracción": 100000,
+        "Diagnóstico": 50000
+    },
+    "EPS": {
+        "cita": 5000,
+        "Limpieza": 0,
+        "Calzas": 40000,
+        "Extracción": 40000,
+        "Diagnóstico": 0
+    },
+    "Prepagada": {
+        "cita": 30000,
+        "Limpieza": 0,
+        "Calzas": 10000,
+        "Extracción": 10000,
+        "Diagnóstico": 0
+    }
+}
+
+# ==========================================================
+# FUNCIONES DE VALIDACION
+# ==========================================================
+
+def pedir_texto(msg):
+    while True:
+        dato = input(msg)
+        if dato != "":
+            return dato
+        print("ERROR: no puede estar vacío")
+
+def pedir_entero(msg):
+    while True:
+        try:
+            dato = int(input(msg))
+            if dato > 0:
+                return dato
+            else:
+                print("ERROR: debe ser mayor a 0")
+        except v:
+            print("ERROR: ingrese un número válido")
+
+def pedir_opcion(msg, opciones):
+    while True:
+        dato = input(msg)
+        if dato in opciones:
+            return dato
+        print("ERROR: opción inválida")
+
+# ==========================================================
+# INGRESO DE DATOS
+# ==========================================================
+
+n = pedir_entero("Ingrese la cantidad de clientes: ")
+
+for i in range(n):
+    print("\n========= REGISTRO CLIENTE", i+1, "=========")
+
+    cedula = pedir_texto("Cédula: ")
+    nombre = pedir_texto("Nombre completo: ")
+    telefono = pedir_texto("Teléfono: ")
+    edad = pedir_entero("Edad: ")
+    direccion = pedir_texto("Dirección: ")
+
+    tipo_cliente = pedir_opcion(
+        "Tipo Cliente (Particular/EPS/Prepagada): ",
+        ["Particular", "EPS", "Prepagada"]
+    )
+
+    tipo_atencion = pedir_opcion(
+        "Tipo Atención (Limpieza/Calzas/Extracción/Diagnóstico): ",
+        ["Limpieza", "Calzas", "Extracción", "Diagnóstico"]
+    )
+
+    # REGLA DE CANTIDAD
+    if tipo_atencion in ["Limpieza", "Diagnóstico"]:
+        cantidad = 1
+    else:
+        cantidad = pedir_entero("Cantidad: ")
+
+    prioridad = pedir_opcion(
+        "Prioridad (Normal/Urgente): ",
+        ["Normal", "Urgente"]
+    )
+
+    fecha = pedir_texto("Fecha de la cita: ")
+    hora = pedir_texto("Hora de la cita: ")
+
+    alergias = pedir_texto("¿Alergias? (Si/No): ")
+    enfermedades = pedir_texto("Enfermedades previas: ")
+    observaciones = pedir_texto("Observaciones: ")
+
+    # ==========================================================
+    # CALCULO DEL VALOR SEGUN TABLA
+    # ==========================================================
+
+    valor_cita = precios[tipo_cliente]["cita"]
+    valor_atencion = precios[tipo_cliente][tipo_atencion]
+
+    total = valor_cita + (valor_atencion * cantidad)
+
+    cliente = {
+        "cedula": cedula,
+        "nombre": nombre,
+        "telefono": telefono,
+        "edad": edad,
+        "direccion": direccion,
+        "tipo_cliente": tipo_cliente,
+        "tipo_atencion": tipo_atencion,
+        "cantidad": cantidad,
+        "prioridad": prioridad,
+        "fecha": fecha,
+        "hora": hora,
+        "alergias": alergias,
+        "enfermedades": enfermedades,
+        "observaciones": observaciones,
+        "total": total
+    }
+
+    # PRIORIDAD
+    if prioridad == "Urgente":
+        cola_clientes.appendleft(cliente)
+    else:
+        cola_clientes.append(cliente)
+
+# ==========================================================
+# MOSTRAR CLIENTES
+# ==========================================================
+
+print("\n========= INFORMACION DE CLIENTES =========")
+
+for c in cola_clientes:
+    print("\n----------------------------------")
+    for clave, valor in c.items():
+        print(f"{clave.upper()}: {valor}")
+    print("----------------------------------")
+
+# ==========================================================
+# RESUMEN
+# ==========================================================
+
+total_clientes = len(cola_clientes)
+ingresos = sum(c["total"] for c in cola_clientes)
+extracciones = sum(1 for c in cola_clientes if c["tipo_atencion"] == "Extracción")
+
+print("\n========= RESUMEN =========")
+print("Total de clientes:", total_clientes)
+print("Ingresos totales:", ingresos)
+print("Clientes de extracción:", extracciones)
+
+# ==========================================================
+# ORDENAMIENTO
+# ==========================================================
+
+lista = list(cola_clientes)
+lista.sort(key=lambda x: x["total"], reverse=True)
+
+print("\n========= CLIENTES ORDENADOS =========")
+
+for c in lista:
+    print(f"{c['nombre']} | {c['tipo_atencion']} | Total: {c['total']}")
+
+# ==========================================================
+# BUSQUEDA
+# ==========================================================
+
+buscar = input("\nIngrese cédula a buscar: ")
+
+encontrado = False
+
+for c in lista:
+    if c["cedula"] == buscar:
+        print("\n========= DATOS DEL CLIENTE =========")
+        for clave, valor in c.items():
+            print(f"{clave}: {valor}")
+        encontrado = True
+
+if not encontrado:
+    print("Cliente no encontrado")
+
+# ==========================================================
+# ATENCION
+# ==========================================================
+
+print("\n========= ATENCION DE PACIENTES =========")
+
+while cola_clientes:
+    paciente = cola_clientes.popleft()
+    print(f"Atendiendo a: {paciente['nombre']} - {paciente['tipo_atencion']}")
+
+print("\nNo hay más pacientes en espera.")
